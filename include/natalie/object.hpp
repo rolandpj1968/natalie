@@ -6,6 +6,7 @@
 #include "natalie/forward.hpp"
 #include "natalie/gc.hpp"
 #include "natalie/global_env.hpp"
+#include "natalie/lexical_scope.hpp"
 #include "natalie/macros.hpp"
 #include "natalie/method_visibility.hpp"
 #include "natalie/object_type.hpp"
@@ -121,11 +122,11 @@ public:
     virtual Optional<Value> cvar_get_maybe(Env *, SymbolObject *);
     virtual Value cvar_set(Env *, SymbolObject *, Value);
 
-    static SymbolObject *define_method(Env *, Value, SymbolObject *, MethodFnPtr, int, int = 0);
+    static SymbolObject *define_method(Env *, Value, SymbolObject *, LexicalScope *, MethodFnPtr, int, int = 0);
     static SymbolObject *define_method(Env *, Value, SymbolObject *, Block *);
     static SymbolObject *undefine_method(Env *, Value, SymbolObject *);
 
-    static SymbolObject *define_singleton_method(Env *, Value, SymbolObject *, MethodFnPtr, int, int = 0);
+    static SymbolObject *define_singleton_method(Env *, Value, SymbolObject *, LexicalScope *, MethodFnPtr, int, int = 0);
     static SymbolObject *define_singleton_method(Env *, Value, SymbolObject *, Block *);
     static SymbolObject *undefine_singleton_method(Env *, Value, SymbolObject *);
 

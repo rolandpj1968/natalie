@@ -1064,7 +1064,7 @@ Value init_openssl(Env *env, Value self) {
 
     OpenSSL->const_set("OPENSSL_VERSION"_s, StringObject::create(OPENSSL_VERSION_TEXT));
     OpenSSL->const_set("OPENSSL_VERSION_NUMBER"_s, Value::integer(OPENSSL_VERSION_NUMBER));
-    Object::define_singleton_method(env, OpenSSL, "fixed_length_secure_compare"_s, OpenSSL_fixed_length_secure_compare, 2);
+    Object::define_singleton_method(env, OpenSSL, "fixed_length_secure_compare"_s, nullptr, OpenSSL_fixed_length_secure_compare, 2);
 
     Value Cipher;
     auto lookup_Cipher = OpenSSL->const_get("Cipher"_s);
@@ -1074,17 +1074,17 @@ Value init_openssl(Env *env, Value self) {
         Cipher = GlobalEnv::the()->Object()->subclass(env, "Cipher");
         OpenSSL->const_set("Cipher"_s, Cipher);
     }
-    Object::define_method(env, Cipher, "initialize"_s, OpenSSL_Cipher_initialize, 1);
-    Object::define_method(env, Cipher, "block_size"_s, OpenSSL_Cipher_block_size, 0);
-    Object::define_method(env, Cipher, "decrypt"_s, OpenSSL_Cipher_decrypt, 0);
-    Object::define_method(env, Cipher, "encrypt"_s, OpenSSL_Cipher_encrypt, 0);
-    Object::define_method(env, Cipher, "final"_s, OpenSSL_Cipher_final, 0);
-    Object::define_method(env, Cipher, "iv="_s, OpenSSL_Cipher_iv_set, 1);
-    Object::define_method(env, Cipher, "iv_len"_s, OpenSSL_Cipher_iv_len, 0);
-    Object::define_method(env, Cipher, "key="_s, OpenSSL_Cipher_key_set, 1);
-    Object::define_method(env, Cipher, "key_len"_s, OpenSSL_Cipher_key_len, 0);
-    Object::define_method(env, Cipher, "update"_s, OpenSSL_Cipher_update, 1);
-    Object::define_singleton_method(env, Cipher, "ciphers"_s, OpenSSL_Cipher_ciphers, 0);
+    Object::define_method(env, Cipher, "initialize"_s, nullptr, OpenSSL_Cipher_initialize, 1);
+    Object::define_method(env, Cipher, "block_size"_s, nullptr, OpenSSL_Cipher_block_size, 0);
+    Object::define_method(env, Cipher, "decrypt"_s, nullptr, OpenSSL_Cipher_decrypt, 0);
+    Object::define_method(env, Cipher, "encrypt"_s, nullptr, OpenSSL_Cipher_encrypt, 0);
+    Object::define_method(env, Cipher, "final"_s, nullptr, OpenSSL_Cipher_final, 0);
+    Object::define_method(env, Cipher, "iv="_s, nullptr, OpenSSL_Cipher_iv_set, 1);
+    Object::define_method(env, Cipher, "iv_len"_s, nullptr, OpenSSL_Cipher_iv_len, 0);
+    Object::define_method(env, Cipher, "key="_s, nullptr, OpenSSL_Cipher_key_set, 1);
+    Object::define_method(env, Cipher, "key_len"_s, nullptr, OpenSSL_Cipher_key_len, 0);
+    Object::define_method(env, Cipher, "update"_s, nullptr, OpenSSL_Cipher_update, 1);
+    Object::define_singleton_method(env, Cipher, "ciphers"_s, nullptr, OpenSSL_Cipher_ciphers, 0);
 
     Value Digest;
     auto lookup_Digest = OpenSSL->const_get("Digest"_s);
@@ -1094,13 +1094,13 @@ Value init_openssl(Env *env, Value self) {
         Digest = GlobalEnv::the()->Object()->subclass(env, "Digest");
         OpenSSL->const_set("Digest"_s, Digest);
     }
-    Object::define_method(env, Digest, "initialize"_s, OpenSSL_Digest_initialize, -1);
-    Object::define_method(env, Digest, "block_length"_s, OpenSSL_Digest_block_length, 0);
-    Object::define_method(env, Digest, "digest"_s, OpenSSL_Digest_digest, -1);
-    Object::define_method(env, Digest, "digest_length"_s, OpenSSL_Digest_digest_length, 0);
-    Object::define_method(env, Digest, "reset"_s, OpenSSL_Digest_reset, 0);
-    Object::define_method(env, Digest, "update"_s, OpenSSL_Digest_update, 1);
-    Object::define_method(env, Digest, "<<"_s, OpenSSL_Digest_update, 1);
+    Object::define_method(env, Digest, "initialize"_s, nullptr, OpenSSL_Digest_initialize, -1);
+    Object::define_method(env, Digest, "block_length"_s, nullptr, OpenSSL_Digest_block_length, 0);
+    Object::define_method(env, Digest, "digest"_s, nullptr, OpenSSL_Digest_digest, -1);
+    Object::define_method(env, Digest, "digest_length"_s, nullptr, OpenSSL_Digest_digest_length, 0);
+    Object::define_method(env, Digest, "reset"_s, nullptr, OpenSSL_Digest_reset, 0);
+    Object::define_method(env, Digest, "update"_s, nullptr, OpenSSL_Digest_update, 1);
+    Object::define_method(env, Digest, "<<"_s, nullptr, OpenSSL_Digest_update, 1);
 
     Value HMAC;
     auto lookup_HMAC = OpenSSL->const_get("HMAC"_s);
@@ -1110,7 +1110,7 @@ Value init_openssl(Env *env, Value self) {
         HMAC = GlobalEnv::the()->Object()->subclass(env, "HMAC");
         OpenSSL->const_set("HMAC"_s, HMAC);
     }
-    Object::define_singleton_method(env, HMAC, "digest"_s, OpenSSL_HMAC_digest, 3);
+    Object::define_singleton_method(env, HMAC, "digest"_s, nullptr, OpenSSL_HMAC_digest, 3);
 
     Value KDF;
     auto lookup_KDF = OpenSSL->const_get("KDF"_s);
@@ -1120,8 +1120,8 @@ Value init_openssl(Env *env, Value self) {
         KDF = ModuleObject::create("KDF");
         OpenSSL->const_set("KDF"_s, KDF);
     }
-    Object::define_singleton_method(env, KDF, "pbkdf2_hmac"_s, OpenSSL_KDF_pbkdf2_hmac, -1);
-    Object::define_singleton_method(env, KDF, "scrypt"_s, OpenSSL_KDF_scrypt, -1);
+    Object::define_singleton_method(env, KDF, "pbkdf2_hmac"_s, nullptr, OpenSSL_KDF_pbkdf2_hmac, -1);
+    Object::define_singleton_method(env, KDF, "scrypt"_s, nullptr, OpenSSL_KDF_scrypt, -1);
 
     return Value::nil();
 }

@@ -65,7 +65,7 @@ class BindingGen
         puts '    ' + binding.get_object
         @consts[binding.rb_class] = true
       end
-      puts "    Object::#{binding.define_method_name}(env, #{binding.rb_class_as_c_variable}, #{binding.rb_method.inspect}_s, #{binding.name}, #{binding.arity});"
+      puts "    Object::#{binding.define_method_name}(env, #{binding.rb_class_as_c_variable}, #{binding.rb_method.inspect}_s, nullptr, #{binding.name}, #{binding.arity});"
       if binding.module_function?
         puts "    #{binding.rb_class_as_c_variable}->module_function(env, #{binding.rb_method.inspect}_s);"
       end

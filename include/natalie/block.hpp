@@ -3,6 +3,7 @@
 #include "natalie/args.hpp"
 #include "natalie/env.hpp"
 #include "natalie/forward.hpp"
+#include "natalie/lexical_scope.hpp"
 #include "tm/owned_ptr.hpp"
 
 namespace Natalie {
@@ -17,14 +18,14 @@ public:
         Method
     };
 
-    static Block *create(Env &env, Value self, MethodFnPtr fn, int arity, bool has_return = false, BlockType type = BlockType::Proc) {
+    static Block *create(Env &env, Value self, LexicalScope *lexical_scope, MethodFnPtr fn, int arity, bool has_return = false, BlockType type = BlockType::Proc) {
         std::lock_guard<std::recursive_mutex> lock(g_gc_recursive_mutex);
-        return new Block(env, self, fn, arity, has_return, type);
+        return new Block(env, self, lexical_scope, fn, arity, has_return, type);
     }
 
-    static Block *create(TM::OwnedPtr<Env> &&env, Value self, MethodFnPtr fn, int arity, bool has_return = false, BlockType type = BlockType::Proc) {
+    static Block *create(TM::OwnedPtr<Env> &&env, Value self, LexicalScope *lexical_scope, MethodFnPtr fn, int arity, bool has_return = false, BlockType type = BlockType::Proc) {
         std::lock_guard<std::recursive_mutex> lock(g_gc_recursive_mutex);
-        return new Block(std::move(env), self, fn, arity, has_return, type);
+        return new Block(std::move(env), self, lexical_scope, fn, arity, has_return, type);
     }
 
     Value run(Env *env, Args &&args = {}, Block *block = nullptr);
@@ -48,6 +49,8 @@ public:
     }
     Value self() const { return m_self; }
 
+    LexicalScope *lexical_scope() const { return m_lexical_scope; }
+
     void copy_fn_pointer_to_method(Method *);
 
     virtual void visit_children(Visitor &visitor) const override final {
@@ -61,22 +64,25 @@ public:
     }
 
 private:
-    Block(Env &env, Value self, MethodFnPtr fn, int arity, bool has_return, BlockType type = BlockType::Proc)
-        : m_fn { fn }
+    Block(Env &env, Value self, LexicalScope *lexical_scope, MethodFnPtr fn, int arity, bool has_return, BlockType type = BlockType::Proc)
+        : m_lexical_scope { lexical_scope }
+        , m_fn { fn }
         , m_arity { arity }
         , m_has_return { has_return }
         , m_env { Env::create(env) }
         , m_self { self }
         , m_type { type } { }
 
-    Block(OwnedPtr<Env> &&env, Value self, MethodFnPtr fn, int arity, bool has_return, BlockType type = BlockType::Proc)
-        : m_fn { fn }
+    Block(OwnedPtr<Env> &&env, Value self, LexicalScope *lexical_scope, MethodFnPtr fn, int arity, bool has_return, BlockType type = BlockType::Proc)
+        : m_lexical_scope { lexical_scope }
+        , m_fn { fn }
         , m_arity { arity }
         , m_has_return { has_return }
         , m_env { env.release() }
         , m_self { self }
         , m_type { type } { }
 
+    LexicalScope *m_lexical_scope;
     MethodFnPtr m_fn;
     int m_arity { 0 };
     bool m_has_return { false };

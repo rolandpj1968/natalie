@@ -57,8 +57,8 @@ Env *build_top_env() {
     ClassObject *EnumeratorArithmeticSequence = Enumerator->subclass(env, "ArithmeticSequence", Object::Type::EnumeratorArithmeticSequence);
     Enumerator->const_set("ArithmeticSequence"_s, EnumeratorArithmeticSequence);
 
-    Object::define_singleton_method(env, BasicObject, "new"_s, Object::_new, -1);
-    Object::define_singleton_method(env, BasicObject, "allocate"_s, Object::allocate, -1);
+    Object::define_singleton_method(env, BasicObject, "new"_s, nullptr, Object::_new, -1);
+    Object::define_singleton_method(env, BasicObject, "allocate"_s, nullptr, Object::allocate, -1);
 
     ClassObject *NilClass = Object->subclass(env, "NilClass", Object::Type::Nil);
     Object->const_set("NilClass"_s, NilClass);

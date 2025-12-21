@@ -491,15 +491,15 @@ Value ModuleObject::remove_class_variable(Env *env, Value name) {
     return val.value();
 }
 
-SymbolObject *ModuleObject::define_method(Env *env, SymbolObject *name, MethodFnPtr fn, int arity, int break_point) {
+SymbolObject *ModuleObject::define_method(Env *env, SymbolObject *name, LexicalScope *lexical_scope, MethodFnPtr fn, int arity, int break_point) {
     assert_not_frozen(env, this);
-    Method *method = new Method { name->string(), this, fn, arity, break_point, env->file(), env->line() };
+    Method *method = new Method { name->string(), this, lexical_scope, fn, arity, break_point, env->file(), env->line() };
     auto visibility = m_method_visibility;
     if (name == "initialize"_s)
         visibility = MethodVisibility::Private;
     define_method(env, name, method, visibility);
     if (m_module_function)
-        Object::define_singleton_method(env, this, name, fn, arity);
+        Object::define_singleton_method(env, this, name, lexical_scope, fn, arity);
     return name;
 }
 
@@ -830,7 +830,7 @@ SymbolObject *ModuleObject::attr_reader(Env *env, Value obj) {
     auto name = obj.to_symbol(env, Value::Conversion::Strict);
     OwnedPtr<Env> block_env { Env::create() };
     block_env->var_set("name", 0, true, name);
-    Block *attr_block = Block::create(std::move(block_env), this, ModuleObject::attr_reader_block_fn, 0);
+    Block *attr_block = Block::create(std::move(block_env), this, nullptr, ModuleObject::attr_reader_block_fn, 0);
     define_method(env, name, attr_block);
     return name;
 }
@@ -856,7 +856,7 @@ SymbolObject *ModuleObject::attr_writer(Env *env, Value obj) {
     auto method_name = SymbolObject::intern(TM::String::format("{}=", name->string()));
     OwnedPtr<Env> block_env { Env::create() };
     block_env->var_set("name", 0, true, name);
-    Block *attr_block = Block::create(std::move(block_env), this, ModuleObject::attr_writer_block_fn, 1);
+    Block *attr_block = Block::create(std::move(block_env), this, nullptr, ModuleObject::attr_writer_block_fn, 1);
     define_method(env, method_name, attr_block);
     return method_name;
 }
@@ -938,7 +938,7 @@ Value ModuleObject::define_method(Env *env, Value name_value, Optional<Value> me
                 else
                     env->raise("TypeError", "bind argument must be a subclass of {}", owner->inspect_module());
             }
-            define_method(env, name, method->fn(), method->arity());
+            define_method(env, name, method->lexical_scope(), method->fn(), method->arity());
         }
     } else if (block) {
         define_method(env, name, block);
@@ -1041,7 +1041,7 @@ Value ModuleObject::module_function(Env *env, Args &&args) {
             auto method_info = find_method(env, name);
             assert_method_defined(env, name, method_info);
             auto method = method_info.method();
-            Object::define_singleton_method(env, this, name, method->fn(), method->arity());
+            Object::define_singleton_method(env, this, name, method->lexical_scope(), method->fn(), method->arity());
             GlobalEnv::the()->increment_method_cache_version();
             m_methods.put(name, MethodInfo(MethodVisibility::Private, method));
         }
@@ -1150,7 +1150,7 @@ Value ModuleObject::ruby2_keywords(Env *env, Value name) {
     OwnedPtr<Env> inner_env { Env::create(*env) };
     inner_env->var_set("old_method", 1, true, instance_method(env, name));
     undef_method(env, { name });
-    define_method(env, name.as_symbol(), Block::create(std::move(inner_env), this, method_wrapper, -1));
+    define_method(env, name.as_symbol(), Block::create(std::move(inner_env), this, nullptr, method_wrapper, -1));
 
     return Value::nil();
 }
