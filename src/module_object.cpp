@@ -111,6 +111,13 @@ Value ModuleObject::const_fetch(SymbolObject *name) const {
 Constant *ModuleObject::find_constant(Env *env, SymbolObject *name, ModuleObject **found_in_module, ConstLookupSearchMode search_mode) {
     std::lock_guard<std::recursive_mutex> lock(g_gc_recursive_mutex);
 
+    bool rpj_debug = false;
+    //printf("ModuleObject::find_constant %s search_mode %d\n", name->inspected(env).c_str(), (int)search_mode);
+    if (false && !strcmp(":CS_CONST13", name->inspected(env).c_str())) {
+        printf("RPJ - BINGO: CS_CONST13 lookup\n");
+        rpj_debug = true;
+    }
+
     ModuleObject *search_parent = nullptr;
     Constant *constant = nullptr;
 
@@ -134,31 +141,60 @@ Constant *ModuleObject::find_constant(Env *env, SymbolObject *name, ModuleObject
               }
           };
 
-    constant = m_constants.get(name);
-    if (constant) {
-        search_parent = this;
-        if (found_in_module) *found_in_module = search_parent;
-        check_valid(constant);
-        return constant;
+    if(rpj_debug) printf("ModuleObject::find_constant %s\n", name->inspected(env).c_str());
+    // TODO - there should always be a lexical_scope, except for top-level
+    auto lexical_scope = env->lexical_scope();
+    if (search_mode == ConstLookupSearchMode::NotStrict) {
+        for (; lexical_scope; lexical_scope = lexical_scope->parent()) {
+            auto module = lexical_scope->module();
+            if(rpj_debug) printf("        looking in lexical scope %s\n", module->inspected(env).c_str());
+            constant = module->m_constants.get(name);
+            if (constant) {
+                if(rpj_debug) printf("                got it!\n");
+                if (found_in_module) *found_in_module = module;
+                check_valid(constant);
+                return constant;
+            }
+        }
     }
 
-    if (search_mode == ConstLookupSearchMode::NotStrict) {
-        // first search in parent namespaces (not including global, i.e. Object namespace)
-        search_parent = this;
-        ModuleObject *found = nullptr;
-        do {
-            search_parent = search_parent->owner();
-            if (!valid_search_module(search_parent))
-                break;
-            constant = search_parent->find_constant(env, name, &found, search_mode);
-        } while (!constant);
+    if (search_mode != ConstLookupSearchMode::NotStrict || !lexical_scope) {
+        if(rpj_debug) printf("        looking in namespace     %s\n", this->inspected(env).c_str());
+        constant = m_constants.get(name);
         if (constant) {
-            search_parent = found;
+            if(rpj_debug) printf("                got it!\n");
+            // if (lexical_scope)
+                // printf("                  <------------------------------------------------------ WHOOOPSIE !!!!!!!!!!!!\n");
+            search_parent = this;
             if (found_in_module) *found_in_module = search_parent;
             check_valid(constant);
             return constant;
         }
+        
+        if (search_mode == ConstLookupSearchMode::NotStrict && !lexical_scope) {
+            // first search in parent namespaces (not including global, i.e. Object namespace)
+            search_parent = this;
+            ModuleObject *found = nullptr;
+            do {
+                search_parent = search_parent->owner();
+                if (!valid_search_module(search_parent))
+                    break;
+                if(rpj_debug) printf("        looking in namespace     %s\n", search_parent->inspected(env).c_str());
+                constant = search_parent->find_constant(env, name, &found, search_mode);
+            } while (!constant);
+            if (constant) {
+                if(rpj_debug) printf("                got it!\n");
+                // if (lexical_scope)
+                    // printf("                  <------------------------------------------------------ WHOOOPSIE !!!!!!!!!!!!\n");
+                search_parent = found;
+                if (found_in_module) *found_in_module = search_parent;
+                check_valid(constant);
+                return constant;
+            }
+        }
     }
+    
+    if(rpj_debug) printf("        looking in %ld included modules of %s\n", this->m_included_modules.size(), this->inspected(env).c_str());
 
     // search included modules
     Vector<ModuleObject *> modules_to_search;
@@ -168,8 +204,10 @@ Constant *ModuleObject::find_constant(Env *env, SymbolObject *name, ModuleObject
     }
     for (size_t i = 0; i < modules_to_search.size(); ++i) {
         auto search_parent = modules_to_search.at(i);
+        if(rpj_debug) printf("        looking in included module %s\n", search_parent->inspected(env).c_str());
         constant = search_parent->m_constants.get(name);
         if (constant) {
+            if(rpj_debug) printf("                got it!\n");
             if (found_in_module) *found_in_module = search_parent;
             break;
         }
@@ -180,11 +218,13 @@ Constant *ModuleObject::find_constant(Env *env, SymbolObject *name, ModuleObject
     }
 
     if (constant) {
+        if(rpj_debug) printf("                got it!\n");
         check_valid(constant);
         return constant;
     }
 
     if (search_mode != ConstLookupSearchMode::StrictPrivate) {
+        if(rpj_debug) printf("        looking in superclass hierarchy of %s\n", this->inspected(env).c_str());
         // search in superclass hierarchy
         search_parent = this;
         ModuleObject *found = nullptr;
@@ -196,6 +236,7 @@ Constant *ModuleObject::find_constant(Env *env, SymbolObject *name, ModuleObject
         } while (!constant);
 
         if (constant) {
+            if(rpj_debug) printf("                got it!\n");
             search_parent = found;
             if (found_in_module) *found_in_module = search_parent;
             check_valid(constant);
@@ -204,12 +245,16 @@ Constant *ModuleObject::find_constant(Env *env, SymbolObject *name, ModuleObject
     }
 
     if (this != GlobalEnv::the()->Object() && search_mode == ConstLookupSearchMode::NotStrict) {
+        if(rpj_debug) printf("        looking in Object\n");
         // lastly, search on the global, i.e. Object namespace
         search_parent = GlobalEnv::the()->Object();
         ModuleObject *found = nullptr;
         constant = search_parent->find_constant(env, name, &found, search_mode);
+        if (constant)
+            if (rpj_debug) printf("                got it!\n");
         if (found_in_module) *found_in_module = found;
     }
+
 
     if (constant) check_valid(constant);
 
@@ -361,7 +406,7 @@ void ModuleObject::method_alias(Env *env, SymbolObject *new_name, SymbolObject *
     make_method_alias(env, new_name, old_name);
 }
 
-    Value ModuleObject::eval_body(Env *env, LexicalScope *lexical_scope, Value (*fn)(Env *, Value)) {
+Value ModuleObject::eval_body(Env *env, LexicalScope *lexical_scope, Value (*fn)(Env *, Value)) {
     Env body_env {};
     body_env.set_lexical_scope(lexical_scope);
     body_env.set_caller(env);

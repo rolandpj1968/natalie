@@ -41,7 +41,7 @@ module Natalie
           transform.top(fn, body)
         end
         transform.exec(
-          "Object::define_method(env, #{klass}, #{transform.intern(@name)}, nullptr, #{fn}, #{@arity}, #{@break_point.to_i})",
+          "Object::define_method(env, #{klass}, #{transform.intern(@name)}, env->lexical_scope(), #{fn}, #{@arity}, #{@break_point.to_i})",
         )
       end
 

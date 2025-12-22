@@ -36,7 +36,7 @@ module Natalie
           body << '}'
           transform.top(fn, body)
         end
-        transform.push("Block::create(*env, self, nullptr, #{fn}, #{@arity}, #{has_return?})")
+        transform.push("Block::create(*env, self, env->lexical_scope(), #{fn}, #{@arity}, #{has_return?})")
       end
 
       def execute(vm)

@@ -9,8 +9,16 @@ public:
         : m_parent(parent)
         , m_module(module) {}
 
+    ModuleObject *module() {
+        return m_module;
+    }
+
+    LexicalScope *parent() {
+        return m_parent;
+    }
+
 private:
-    LexicalScope *m_parent { nullptr };
-    ModuleObject *m_module { nullptr };
+    LexicalScope *m_parent;
+    ModuleObject *m_module;
 };
 }

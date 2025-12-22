@@ -251,6 +251,12 @@ void Object::extend_once(Env *env, ModuleObject *module) {
 }
 
 Optional<Value> Object::const_find_with_autoload(Env *env, Value ns, Value self, SymbolObject *name, ConstLookupSearchMode search_mode, ConstLookupFailureMode failure_mode) {
+    // if (env->lexical_scope()) {
+    //     printf("Object::const_find_with_autoload lexical-scope %s/%p / ns %s / looking up %s\n", env->lexical_scope()->module()->inspected(env).c_str(), env->lexical_scope()->parent(), ns.inspected(env).c_str(), name->inspected(env).c_str());
+    // }
+    // if (!env->lexical_scope()) {
+    //     printf("Object::const_find_with_autoload NO lexical-scope ns %s looking up %s\n", ns.inspected(env).c_str(), name->inspected(env).c_str());
+    // }
     if (GlobalEnv::the()->instance_evaling()) {
         auto context = GlobalEnv::the()->current_instance_eval_context();
         if (context.caller_env->module()) {
