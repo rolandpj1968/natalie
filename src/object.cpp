@@ -254,9 +254,10 @@ Optional<Value> Object::const_find_with_autoload(Env *env, Value ns, Value self,
     // if (env->lexical_scope()) {
     //     printf("Object::const_find_with_autoload lexical-scope %s/%p / ns %s / looking up %s\n", env->lexical_scope()->module()->inspected(env).c_str(), env->lexical_scope()->parent(), ns.inspected(env).c_str(), name->inspected(env).c_str());
     // }
-    // if (!env->lexical_scope()) {
+    // if (!env->lexical_scope() && search_mode == ConstLookupSearchMode::NotStrict) {
     //     printf("Object::const_find_with_autoload NO lexical-scope ns %s looking up %s\n", ns.inspected(env).c_str(), name->inspected(env).c_str());
     // }
+    // TODO - work out instance_eval lexical_scope
     if (GlobalEnv::the()->instance_evaling()) {
         auto context = GlobalEnv::the()->current_instance_eval_context();
         if (context.caller_env->module()) {
