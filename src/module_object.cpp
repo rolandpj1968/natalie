@@ -17,8 +17,16 @@ ModuleObject::ModuleObject(Type type, ClassObject *klass)
 
 Value ModuleObject::initialize(Env *env, Block *block) {
     if (block) {
+        // TODO - factor with module_eval
+        // TODO RPJ - completely broken cos this is re-used; instead we need to maintain a dynamic map of
+        //   (block, module) -> lexical_scope
+        // For example if methods are defined, they will point to this (changing) lexical_scope
+        static LexicalScope lexical_scope { nullptr, nullptr };
+        lexical_scope = LexicalScope(block->lexical_scope(), this);
+
         Value self = this;
-        block->set_self(self);
+        block->set_self(self); // TODO thread-safe?
+        block->env()->set_lexical_scope(&lexical_scope); // TODO - not thread-safe
         Value args[] = { self };
         block->run(env, Args(1, args), nullptr);
     }
@@ -106,6 +114,33 @@ Value ModuleObject::const_fetch(SymbolObject *name) const {
         abort();
     }
     return constant.value();
+}
+
+Constant *ModuleObject::find_constant_in_modules(Env *env, SymbolObject *name, ModuleObject **found_in_module) {
+    Constant *constant = nullptr;
+    if (m_included_modules.is_empty()) {
+        constant = this->get_constant(name, found_in_module);
+    } else {
+        for (auto module : m_included_modules) {
+            if (module == this)
+                constant = this->get_constant(name, found_in_module);
+            else
+                constant = module->find_constant_in_modules(env, name, found_in_module);
+            if (constant)
+                break;
+        }
+    }
+    return constant;
+}
+
+Constant *ModuleObject::find_constant_in_class_hierarchy(Env *env, SymbolObject *name, bool include_object, ModuleObject **found_in_module) {
+    if (!include_object && (this == GlobalEnv::the()->Object() || this == GlobalEnv::the()->BasicObject()))
+        return nullptr;
+
+    auto constant = find_constant_in_modules(env, name, found_in_module);
+    if (!constant && m_superclass)
+        constant = m_superclass->find_constant_in_class_hierarchy(env, name, include_object, found_in_module);
+    return constant;
 }
 
 Constant *ModuleObject::find_constant(Env *env, SymbolObject *name, ModuleObject **found_in_module, ConstLookupSearchMode search_mode) {
@@ -957,8 +992,15 @@ Value ModuleObject::module_eval(Env *env, Block *block) {
     if (!block) {
         env->raise("ArgumentError", "Natalie only supports module_eval with a block");
     }
+    // TODO RPJ - completely broken cos this is re-used; instead we need to maintain a dynamic map of
+    //   (block, module) -> lexical_scope
+    // For example if methods are defined, they will point to this (changing) lexical_scope
+    static LexicalScope lexical_scope { nullptr, nullptr };
+    lexical_scope = LexicalScope(block->lexical_scope(), this);
+
     Value self = this;
-    block->set_self(self);
+    block->set_self(self); // TODO thread-safe?
+    block->env()->set_lexical_scope(&lexical_scope); // TODO - not thread-safe
     auto old_method_visibility = m_method_visibility;
     auto old_module_function = m_module_function;
     Value args[] = { self };

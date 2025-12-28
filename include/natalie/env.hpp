@@ -38,7 +38,6 @@ public:
 
     Env(Env *outer)
         : m_outer { outer } { }
-    //, m_lexical_scope { outer->lexical_scope() } { } TODO RPJ???
 
     Env(const Env &other)
         : m_vars { other.m_vars }
