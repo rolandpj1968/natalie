@@ -274,15 +274,11 @@ describe "Constant resolution within methods" do
     end
 
     it "searches the lexical scope of the method not the receiver's immediate class" do
-      NATFIXME "searches the lexical scope of the method not the receiver's immediate class", exception: SpecFailedException do
-        ConstantSpecs::ContainerA::ChildA.const19.should == :const19_1
-      end
+      ConstantSpecs::ContainerA::ChildA.const19.should == :const19_1
     end
 
     it "searches the lexical scope of a singleton method" do
-      NATFIXME 'searches the lexical scope of a singleton method', exception: SpecFailedException do
-        ConstantSpecs::CS_CONST18.const17.should == :const17_1
-      end
+      ConstantSpecs::CS_CONST18.const17.should == :const17_1
     end
 
     it "does not search the lexical scope of the caller" do
@@ -299,11 +295,9 @@ describe "Constant resolution within methods" do
     end
 
     it "does not search the lexical scope of qualifying modules" do
-      NATFIXME 'does not search the lexical scope of qualifying modules', exception: SpecFailedException do
-        -> do
-          ConstantSpecs::ContainerA::ChildA.const23
-        end.should raise_error(NameError)
-      end
+      -> do
+        ConstantSpecs::ContainerA::ChildA.const23
+      end.should raise_error(NameError)
     end
   end
 
@@ -384,9 +378,7 @@ describe "Constant resolution within methods" do
         end
       end
 
-      NATFIXME "searches the lexical scope of the method not the receiver's immediate class", exception: SpecFailedException do
-        ConstantSpecs::ContainerB::ChildB.const206.should == :const206_1
-      end
+      ConstantSpecs::ContainerB::ChildB.const206.should == :const206_1
     ensure
       ConstantSpecs::ContainerB::ChildB.send(:remove_const, :CS_CONST206)
       ConstantSpecs::ContainerB::ChildB.singleton_class.send(:remove_const, :CS_CONST206)
@@ -396,9 +388,7 @@ describe "Constant resolution within methods" do
       ConstantSpecs::CS_CONST207 = :const207_1
       ConstantSpecs::ClassB::CS_CONST207 = :const207_2
 
-      NATFIXME 'searches the lexical scope of a singleton method', exception: SpecFailedException do
-        ConstantSpecs::CS_CONST208.const207.should == :const207_1
-      end
+      ConstantSpecs::CS_CONST208.const207.should == :const207_1
     ensure
       ConstantSpecs.send(:remove_const, :CS_CONST207)
       ConstantSpecs::ClassB.send(:remove_const, :CS_CONST207)
@@ -429,9 +419,7 @@ describe "Constant resolution within methods" do
 
       Object::CS_CONST212 = :const212_2
       ConstantSpecs::ParentB::CS_CONST212 = :const212_1
-      NATFIXME 'something about Object being opened', exception: SpecFailedException, message: ':const212_2 should be == to :const212_1' do
-        ConstantSpecs::ContainerB::ChildB.const212.should == :const212_1
-      end
+      ConstantSpecs::ContainerB::ChildB.const212.should == :const212_1
     ensure
       Object.send(:remove_const, :CS_CONST211)
       ConstantSpecs::ParentB.send(:remove_const, :CS_CONST211)
@@ -458,11 +446,9 @@ describe "Constant resolution within methods" do
     it "does not search the lexical scope of qualifying modules" do
       ConstantSpecs::ContainerB::CS_CONST214 = :const214
 
-      NATFIXME 'does not search the lexical scope of qualifying modules', exception: SpecFailedException do
-        -> do
-          ConstantSpecs::ContainerB::ChildB.const214
-        end.should raise_error(NameError)
-      end
+      -> do
+        ConstantSpecs::ContainerB::ChildB.const214
+      end.should raise_error(NameError)
     ensure
       ConstantSpecs::ContainerB.send(:remove_const, :CS_CONST214)
     end
@@ -480,33 +466,25 @@ end
 
 describe "Constant resolution within a singleton class (class << obj)" do
   it "works like normal classes or modules" do
-    NATFIXME 'works like normal classes or modules', exception: NameError do
-      ConstantSpecs::CS_SINGLETON1.foo.should == 1
-    end
+    ConstantSpecs::CS_SINGLETON1.foo.should == 1
   end
 
   it "uses its own namespace for each object" do
-    NATFIXME 'uses its own namespace for each object', exception: NameError do
-      a = ConstantSpecs::CS_SINGLETON2[0].foo
-      b = ConstantSpecs::CS_SINGLETON2[1].foo
-      [a, b].should == [1, 2]
-    end
+    a = ConstantSpecs::CS_SINGLETON2[0].foo
+    b = ConstantSpecs::CS_SINGLETON2[1].foo
+    [a, b].should == [1, 2]
   end
 
   it "uses its own namespace for nested modules" do
-    NATFIXME 'uses its own namespace for nested modules', exception: NameError do
-      a = ConstantSpecs::CS_SINGLETON3[0].x
-      b = ConstantSpecs::CS_SINGLETON3[1].x
-      a.should_not equal(b)
-    end
+    a = ConstantSpecs::CS_SINGLETON3[0].x
+    b = ConstantSpecs::CS_SINGLETON3[1].x
+    a.should_not equal(b)
   end
 
   it "allows nested modules to have proper resolution" do
-    NATFIXME 'allows nested modules to have proper resolution', exception: NoMethodError, message: /undefined method [`']new' for nil/ do
-      a = ConstantSpecs::CS_SINGLETON4_CLASSES[0].new
-      b = ConstantSpecs::CS_SINGLETON4_CLASSES[1].new
-      [a.foo, b.foo].should == [1, 2]
-    end
+    a = ConstantSpecs::CS_SINGLETON4_CLASSES[0].new
+    b = ConstantSpecs::CS_SINGLETON4_CLASSES[1].new
+    [a.foo, b.foo].should == [1, 2]
   end
 end
 
