@@ -134,6 +134,7 @@ public:
 
     Value main_obj_define_method(Env *, Value, Optional<Value>, Block *);
     Value main_obj_inspect(Env *);
+    Value main_obj_include(Env *, Args &&);
 
     virtual Value private_method(Env *, Args &&);
     virtual Value protected_method(Env *, Args &&);
